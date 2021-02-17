@@ -31,9 +31,29 @@ function bootstrap(obj, varargin)
                     binfile = cellfun(@(f) jrclust.utils.subsExt(f, '.bin'), metafile, 'UniformOutput', 0);
             end
         end
+        % set whether to ask user input 
+        if any(cellfun(@(x) strcmp(x,'-noconfirm'), varargin))
+            ask=false;
+        else
+            ask=true;
+        end
+        % check whether user requires advanced parameters
+        if any(cellfun(@(x) strcmp(x,'-advanced'), varargin))
+            advanced=true;
+        else
+            advanced=false;
+        end
+        % check whether user requires edit the file
+        if any(cellfun(@(x) strcmp(x,'-noedit'), varargin))
+            ifedit=false;
+        else
+            ifedit=true;
+        end
     else
         metafile = '';
         workingdir = pwd();
+        ask=true;
+        ifedit=true;
     end
 
     % first check for a .meta file
@@ -110,7 +130,7 @@ function bootstrap(obj, varargin)
         cfgData.outputDir = workingdir;
     end
 
-    dlgAns = questdlg('Would you like to specify a probe file?', 'Bootstrap', 'No');
+    dlgAns = 'No'; %questdlg('Would you like to specify a probe file?', 'Bootstrap', 'No');
     switch dlgAns
         case 'Yes' % select .prb file
             probedir = workingdir;
@@ -147,7 +167,11 @@ function bootstrap(obj, varargin)
                         num2str(hCfg_.bitScaling), ...
                         num2str(hCfg_.headerOffset), ...
                         hCfg_.dataType};
-        dlgAns = inputdlg(dlgFieldNames, 'Does this look correct?', 1, dlgFieldVals, struct('Resize', 'on', 'Interpreter', 'tex'));
+        if ask            
+            dlgAns = inputdlg(dlgFieldNames, 'Does this look correct?', 1, dlgFieldVals, struct('Resize', 'on', 'Interpreter', 'tex'));
+        else
+            dlgAns= dlgFieldVals';
+        end
         if isempty(dlgAns)
             return;
         end
@@ -208,7 +232,13 @@ function bootstrap(obj, varargin)
         break;
     end
 
-    dlgAns = questdlg('Would you like to export advanced parameters as well?', 'Bootstrap', 'No');
+    if ask
+        dlgAns = questdlg('Would you like to export advanced parameters?', 'Bootstrap', 'No');
+    elseif advanced
+        dlgAns = 'Yes';
+    else
+        dlgAns = 'No';
+    end
     switch dlgAns
         case 'Yes'
             hCfg_.save('', 1);
@@ -221,7 +251,9 @@ function bootstrap(obj, varargin)
     end
 
     obj.hCfg = hCfg_;
-    obj.hCfg.edit();
+    if ifedit
+        obj.hCfg.edit();
+    end
 end
 
 %% LOCAL FUNCTIONS
