@@ -43,11 +43,19 @@ function bootstrap(obj, varargin)
         else
             advanced=false;
         end
+        % check whether user requires edit the file
+        if any(cellfun(@(x) strcmp(x,'-noedit'), varargin))
+            ifedit=false;
+        else
+            ifedit=true;
+        end
+
     else
         metafile = '';
         workingdir = pwd();
         % since narg <= 1, '-noconfirm' not set
         ask=true;
+        ifedit=true;
     end
 
     % first check for a .meta file
@@ -193,7 +201,9 @@ function bootstrap(obj, varargin)
     end
 
     obj.hCfg = hCfg_;
-    obj.hCfg.edit();
+    if ifedit 
+        obj.hCfg.edit();
+    end
 end
 
 %% LOCAL FUNCTIONS
@@ -252,21 +262,23 @@ function cfgData = metaToConfig(metafile, binfile, workingdir)
         if ~isempty(SMeta.probeOpt) % 3A with option
             probeFile = sprintf('imec3_opt%d.prb', SMeta.probeOpt);
         else % 3A or 3B; ask
-            dlgAns = questdlg('It looks like you have a Neuropixels probe. Is this correct?', 'Bootstrap', ...
-                              'Yes', 'No', 'No'); % don't permit 'Cancel'
+%             dlgAns = questdlg('It looks like you have a Neuropixels probe. Is this correct?', 'Bootstrap', ...
+%                               'Yes', 'No', 'No'); % don't permit 'Cancel'
+            dlgAns = 'Yes';
             if isempty(dlgAns) % closed dialog; cancel
                 cfgData = [];
                 return;
             end
 
             if strcmp(dlgAns, 'Yes')
-                dlgAns = listdlg('PromptString', 'Specify your configuration', ...
-                                 'SelectionMode', 'single', ...
-                                 'ListString', {'Phase 3A', ...
-                                                'Phase 3B (Staggered)', ...
-                                                'Phase 3B (Aligned)', ...
-                                                'Custom configuration', ...
-                                                'Set manually'});
+%                 dlgAns = listdlg('PromptString', 'Specify your configuration', ...
+%                                  'SelectionMode', 'single', ...
+%                                  'ListString', {'Phase 3A', ...
+%                                                 'Phase 3B (Staggered)', ...
+%                                                 'Phase 3B (Aligned)', ...
+%                                                 'Custom configuration', ...
+%                                                 'Set manually'});
+                dlgAns = 2;
                 switch dlgAns
                     case 1
                         probeFile = 'imec3a.prb';
